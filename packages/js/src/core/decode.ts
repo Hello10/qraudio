@@ -41,25 +41,33 @@ export function scan(samples: Float32Array, options: ScanOptions = {}): ScanResu
     for (let offset = 0; offset < samplesPerSymbol; offset += offsetStep) {
       const dataBits =
         settings.modulation === "mfsk"
-          ? demodMfsk(
+          ? demodMfsk({
+            samples,
+            sampleRate,
+            baud,
+            offset: Math.floor(offset),
+            tones: settings.tones ?? [markFreq, spaceFreq],
+            bitsPerSymbol,
+          })
+          : nrziDecode(
+            demodAfsk({
               samples,
               sampleRate,
               baud,
-              Math.floor(offset),
-              settings.tones ?? [markFreq, spaceFreq],
-              bitsPerSymbol
-            )
-          : nrziDecode(
-              demodAfsk(samples, sampleRate, baud, Math.floor(offset), markFreq, spaceFreq)
-            );
+              offset: Math.floor(offset),
+              markFreq,
+              spaceFreq,
+            })
+          );
+
       const frames = extractFrames(dataBits);
 
       for (const frame of frames) {
         let parsed:
           | {
-              json: unknown;
-              profile: Profile;
-            }
+            json: unknown;
+            profile: Profile;
+          }
           | null = null;
         try {
           parsed = decodeFrame(frame.bytes, options.gzipDecompress);

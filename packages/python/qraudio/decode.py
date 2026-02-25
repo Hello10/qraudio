@@ -68,23 +68,24 @@ def scan(
         while offset < samples_per_symbol:
             if settings.modulation == "mfsk":
                 data_bits = demodMfsk(
-                    samples,
-                    resolved_sample_rate,
-                    baud,
-                    int(offset),
-                    settings.tones or [settings.markFreq, settings.spaceFreq],
-                    bits_per_symbol,
+                    samples=samples,
+                    sample_rate=resolved_sample_rate,
+                    baud=baud,
+                    offset=int(offset),
+                    tones=settings.tones or [settings.markFreq, settings.spaceFreq],
+                    bits_per_symbol=bits_per_symbol,
                 )
             else:
                 tone_bits = demodAfsk(
-                    samples,
-                    resolved_sample_rate,
-                    baud,
-                    int(offset),
-                    settings.markFreq,
-                    settings.spaceFreq,
+                    samples=samples,
+                    sample_rate=resolved_sample_rate,
+                    baud=baud,
+                    offset=int(offset),
+                    mark_freq=settings.markFreq,
+                    space_freq=settings.spaceFreq,
                 )
                 data_bits = nrziDecode(tone_bits)
+
 
             frames = extractFrames(data_bits)
             for frame in frames:

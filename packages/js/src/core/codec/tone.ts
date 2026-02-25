@@ -1,14 +1,15 @@
 import { applyFade } from "./envelope.js";
 
 export interface ToneSampleOptions {
+  freq: number;
   sampleRate: number;
   durationMs: number;
   levelDb: number;
   fadeMs: number;
 }
 
-export function toneToSamples(freq: number, options: ToneSampleOptions): Float32Array {
-  const { sampleRate, durationMs, levelDb, fadeMs } = options;
+export function toneToSamples(options: ToneSampleOptions): Float32Array {
+  const { freq, sampleRate, durationMs, levelDb, fadeMs } = options;
   const sampleCount = Math.max(1, Math.round((durationMs / 1000) * sampleRate));
   const out = new Float32Array(sampleCount);
   const amplitude = Math.pow(10, levelDb / 20);

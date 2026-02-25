@@ -78,7 +78,7 @@ def encode(
 
     if settings.modulation == "gfsk":
         samples = gfskTonesToSamples(
-            encoded_bits,
+            tones=encoded_bits,
             sample_rate=resolved_sample_rate,
             baud=settings.baud,
             mark_freq=settings.markFreq,
@@ -90,7 +90,7 @@ def encode(
         )
     elif settings.modulation == "mfsk":
         samples = mfskBitsToSamples(
-            encoded_bits,
+            bits=encoded_bits,
             sample_rate=resolved_sample_rate,
             baud=settings.baud,
             tones=settings.tones or [settings.markFreq, settings.spaceFreq],
@@ -100,7 +100,7 @@ def encode(
         )
     else:
         samples = tonesToSamples(
-            encoded_bits,
+            tones=encoded_bits,
             sample_rate=resolved_sample_rate,
             baud=settings.baud,
             mark_freq=settings.markFreq,
@@ -166,7 +166,7 @@ def buildChime(
     second_freq: float,
 ) -> list[float]:
     first = toneToSamples(
-        first_freq,
+        freq=first_freq,
         sample_rate=sample_rate,
         duration_ms=tone_ms,
         level_db=level_db,
@@ -174,7 +174,7 @@ def buildChime(
     )
     gap_samples = [0.0] * max(1, round((gap_ms / 1000.0) * sample_rate)) if gap_ms > 0 else []
     second = toneToSamples(
-        second_freq,
+        freq=second_freq,
         sample_rate=sample_rate,
         duration_ms=tone_ms,
         level_db=level_db,

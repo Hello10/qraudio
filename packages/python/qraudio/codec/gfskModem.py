@@ -7,8 +7,8 @@ from .envelope import applyFade
 
 
 def gfskTonesToSamples(
-    tones: list[int],
     *,
+    tones: list[int],
     sample_rate: float,
     baud: float,
     mark_freq: float,

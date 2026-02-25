@@ -1,6 +1,7 @@
 import { applyFade } from "./envelope.js";
 
 interface GfskOptions {
+  tones: number[];
   sampleRate: number;
   baud: number;
   markFreq: number;
@@ -11,8 +12,8 @@ interface GfskOptions {
   spanSymbols?: number;
 }
 
-export function gfskTonesToSamples(tones: number[], options: GfskOptions): Float32Array {
-  const { sampleRate, baud, markFreq, spaceFreq, levelDb, fadeMs } = options;
+export function gfskTonesToSamples(options: GfskOptions): Float32Array {
+  const { tones, sampleRate, baud, markFreq, spaceFreq, levelDb, fadeMs } = options;
   const samplesPerBit = sampleRate / baud;
   const totalSamples = Math.ceil(tones.length * samplesPerBit);
 
@@ -61,14 +62,17 @@ export function gfskTonesToSamples(tones: number[], options: GfskOptions): Float
   return out;
 }
 
-export function demodGfsk(
-  samples: Float32Array,
-  sampleRate: number,
-  baud: number,
-  offset: number,
-  markFreq: number,
-  spaceFreq: number
-): number[] {
+interface DemodGfskOptions {
+  samples: Float32Array;
+  sampleRate: number;
+  baud: number;
+  offset: number;
+  markFreq: number;
+  spaceFreq: number;
+}
+
+export function demodGfsk(options: DemodGfskOptions): number[] {
+  const { samples, sampleRate, baud, offset, markFreq, spaceFreq } = options;
   const samplesPerBit = sampleRate / baud;
   const tones: number[] = [];
   const centerFreq = (markFreq + spaceFreq) / 2;

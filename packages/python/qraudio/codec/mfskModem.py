@@ -6,8 +6,8 @@ from .envelope import applyFade
 
 
 def mfskBitsToSamples(
-    bits: list[int],
     *,
+    bits: list[int],
     sample_rate: float,
     baud: float,
     tones: list[float],
@@ -63,6 +63,7 @@ def mfskBitsToSamples(
 
 
 def demodMfsk(
+    *,
     samples: list[float],
     sample_rate: float,
     baud: float,
@@ -94,7 +95,7 @@ def demodMfsk(
         best_index = 0
         best_energy = -1.0
         for idx in range(required_tones):
-            energy = goertzel(samples, start, length, tones[idx], sample_rate)
+            energy = goertzel(samples=samples, start=start, length=length, freq=tones[idx], sample_rate=sample_rate)
             if energy > best_energy:
                 best_energy = energy
                 best_index = idx
@@ -109,6 +110,7 @@ def demodMfsk(
 
 
 def goertzel(
+    *,
     samples: list[float],
     start: int,
     length: int,

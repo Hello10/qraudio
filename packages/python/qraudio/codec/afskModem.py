@@ -6,8 +6,8 @@ from .envelope import applyFade
 
 
 def tonesToSamples(
-    tones: list[int],
     *,
+    tones: list[int],
     sample_rate: float,
     baud: float,
     mark_freq: float,
@@ -40,6 +40,7 @@ def tonesToSamples(
 
 
 def demodAfsk(
+    *,
     samples: list[float],
     sample_rate: float,
     baud: float,
@@ -60,8 +61,8 @@ def demodAfsk(
             start = end
             boundary += samples_per_bit
             continue
-        mark_energy = goertzel(samples, start, length, mark_freq, sample_rate)
-        space_energy = goertzel(samples, start, length, space_freq, sample_rate)
+        mark_energy = goertzel(samples=samples, start=start, length=length, freq=mark_freq, sample_rate=sample_rate)
+        space_energy = goertzel(samples=samples, start=start, length=length, freq=space_freq, sample_rate=sample_rate)
         tones.append(1 if mark_energy >= space_energy else 0)
         start = end
         boundary += samples_per_bit
@@ -70,6 +71,7 @@ def demodAfsk(
 
 
 def goertzel(
+    *,
     samples: list[float],
     start: int,
     length: int,

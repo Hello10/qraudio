@@ -58,26 +58,29 @@ export function encode(json: unknown, options: EncodeOptions = {}): EncodeResult
 
   let samples =
     profileSettings.modulation === "gfsk"
-      ? gfskTonesToSamples(encodedBits, {
+      ? gfskTonesToSamples({
+        tones: encodedBits,
+        sampleRate,
+        baud,
+        markFreq,
+        spaceFreq,
+        levelDb: options.levelDb ?? DEFAULT_LEVEL_DB,
+        fadeMs,
+        bt: profileSettings.bt,
+        spanSymbols: profileSettings.spanSymbols,
+      })
+      : profileSettings.modulation === "mfsk"
+        ? mfskBitsToSamples({
+          bits: encodedBits,
           sampleRate,
           baud,
-          markFreq,
-          spaceFreq,
+          tones: profileSettings.tones ?? [markFreq, spaceFreq],
+          bitsPerSymbol: profileSettings.bitsPerSymbol ?? 1,
           levelDb: options.levelDb ?? DEFAULT_LEVEL_DB,
           fadeMs,
-          bt: profileSettings.bt,
-          spanSymbols: profileSettings.spanSymbols,
         })
-      : profileSettings.modulation === "mfsk"
-        ? mfskBitsToSamples(encodedBits, {
-            sampleRate,
-            baud,
-            tones: profileSettings.tones ?? [markFreq, spaceFreq],
-            bitsPerSymbol: profileSettings.bitsPerSymbol ?? 1,
-            levelDb: options.levelDb ?? DEFAULT_LEVEL_DB,
-            fadeMs,
-          })
-      : tonesToSamples(encodedBits, {
+        : tonesToSamples({
+          tones: encodedBits,
           sampleRate,
           baud,
           markFreq,
@@ -140,18 +143,24 @@ function buildChime(options: {
   firstFreq: number;
   secondFreq: number;
 }): Float32Array {
-  const toneOptions = {
+  const first = toneToSamples({
+    freq: options.firstFreq,
     sampleRate: options.sampleRate,
     durationMs: options.toneMs,
     levelDb: options.levelDb,
     fadeMs: options.fadeMs,
-  };
-  const first = toneToSamples(options.firstFreq, toneOptions);
+  });
   const gap =
     options.gapMs > 0
       ? new Float32Array(Math.max(1, Math.round((options.gapMs / 1000) * options.sampleRate)))
       : new Float32Array(0);
-  const second = toneToSamples(options.secondFreq, toneOptions);
+  const second = toneToSamples({
+    freq: options.secondFreq,
+    sampleRate: options.sampleRate,
+    durationMs: options.toneMs,
+    levelDb: options.levelDb,
+    fadeMs: options.fadeMs,
+  });
   return concatFloat32([first, gap, second]);
 }
 

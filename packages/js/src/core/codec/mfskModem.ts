@@ -1,6 +1,7 @@
 import { applyFade } from "./envelope.js";
 
 interface MfskOptions {
+  bits: number[];
   sampleRate: number;
   baud: number;
   tones: number[];
@@ -9,8 +10,8 @@ interface MfskOptions {
   fadeMs: number;
 }
 
-export function mfskBitsToSamples(bits: number[], options: MfskOptions): Float32Array {
-  const { sampleRate, baud, tones, bitsPerSymbol, levelDb, fadeMs } = options;
+export function mfskBitsToSamples(options: MfskOptions): Float32Array {
+  const { bits, sampleRate, baud, tones, bitsPerSymbol, levelDb, fadeMs } = options;
   if (bitsPerSymbol <= 0) {
     throw new Error("bitsPerSymbol must be >= 1");
   }
@@ -66,14 +67,17 @@ export function mfskBitsToSamples(bits: number[], options: MfskOptions): Float32
   return out;
 }
 
-export function demodMfsk(
-  samples: Float32Array,
-  sampleRate: number,
-  baud: number,
-  offset: number,
-  tones: number[],
-  bitsPerSymbol: number
-): number[] {
+interface DemodMfskOptions {
+  samples: Float32Array;
+  sampleRate: number;
+  baud: number;
+  offset: number;
+  tones: number[];
+  bitsPerSymbol: number;
+}
+
+export function demodMfsk(options: DemodMfskOptions): number[] {
+  const { samples, sampleRate, baud, offset, tones, bitsPerSymbol } = options;
   if (bitsPerSymbol <= 0) {
     return [];
   }
@@ -102,7 +106,7 @@ export function demodMfsk(
     let bestIndex = 0;
     let bestEnergy = -Infinity;
     for (let i = 0; i < usedTones.length; i += 1) {
-      const energy = goertzel(samples, start, len, usedTones[i], sampleRate);
+      const energy = goertzel({ samples, start, length: len, freq: usedTones[i], sampleRate });
       if (energy > bestEnergy) {
         bestEnergy = energy;
         bestIndex = i;
@@ -121,11 +125,7 @@ export function demodMfsk(
 }
 
 function goertzel(
-  samples: Float32Array,
-  start: number,
-  length: number,
-  freq: number,
-  sampleRate: number
+  { samples, start, length, freq, sampleRate }: { samples: Float32Array; start: number; length: number; freq: number; sampleRate: number }
 ): number {
   const omega = (2 * Math.PI * freq) / sampleRate;
   const coeff = 2 * Math.cos(omega);

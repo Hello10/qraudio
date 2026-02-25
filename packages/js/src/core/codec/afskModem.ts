@@ -1,6 +1,7 @@
 import { applyFade } from "./envelope.js";
 
 interface ToneOptions {
+  tones: number[];
   sampleRate: number;
   baud: number;
   markFreq: number;
@@ -9,8 +10,8 @@ interface ToneOptions {
   fadeMs: number;
 }
 
-export function tonesToSamples(tones: number[], options: ToneOptions): Float32Array {
-  const { sampleRate, baud, markFreq, spaceFreq, levelDb, fadeMs } = options;
+export function tonesToSamples(options: ToneOptions): Float32Array {
+  const { tones, sampleRate, baud, markFreq, spaceFreq, levelDb, fadeMs } = options;
   const samplesPerBit = sampleRate / baud;
   const totalSamples = Math.ceil(tones.length * samplesPerBit);
   const out = new Float32Array(totalSamples);
@@ -38,14 +39,17 @@ export function tonesToSamples(tones: number[], options: ToneOptions): Float32Ar
   return out;
 }
 
-export function demodAfsk(
-  samples: Float32Array,
-  sampleRate: number,
-  baud: number,
-  offset: number,
-  markFreq: number,
-  spaceFreq: number
-): number[] {
+interface DemodAfskOptions {
+  samples: Float32Array;
+  sampleRate: number;
+  baud: number;
+  offset: number;
+  markFreq: number;
+  spaceFreq: number;
+}
+
+export function demodAfsk(options: DemodAfskOptions): number[] {
+  const { samples, sampleRate, baud, offset, markFreq, spaceFreq } = options;
   const samplesPerBit = sampleRate / baud;
   const tones: number[] = [];
 
@@ -60,8 +64,8 @@ export function demodAfsk(
       boundary += samplesPerBit;
       continue;
     }
-    const markEnergy = goertzel(samples, start, len, markFreq, sampleRate);
-    const spaceEnergy = goertzel(samples, start, len, spaceFreq, sampleRate);
+    const markEnergy = goertzel({ samples, start, length: len, freq: markFreq, sampleRate });
+    const spaceEnergy = goertzel({ samples, start, length: len, freq: spaceFreq, sampleRate });
     tones.push(markEnergy >= spaceEnergy ? 1 : 0);
     start = end;
     boundary += samplesPerBit;
@@ -71,11 +75,7 @@ export function demodAfsk(
 }
 
 function goertzel(
-  samples: Float32Array,
-  start: number,
-  length: number,
-  freq: number,
-  sampleRate: number
+  { samples, start, length, freq, sampleRate }: { samples: Float32Array; start: number; length: number; freq: number; sampleRate: number }
 ): number {
   const omega = (2 * Math.PI * freq) / sampleRate;
   const coeff = 2 * Math.cos(omega);

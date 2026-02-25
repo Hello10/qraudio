@@ -6,8 +6,8 @@ from .envelope import applyFade
 
 
 def toneToSamples(
-    freq: float,
     *,
+    freq: float,
     sample_rate: float,
     duration_ms: float,
     level_db: float,

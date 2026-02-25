@@ -224,8 +224,8 @@ Common flags: `--profile <afsk-bell|afsk-fifth|gfsk-fifth|mfsk>`, `--format <pcm
 uv sync
 
 # Run tests
-pytest
+uv run python -m pytest
 
 # Run a single test file
-pytest tests/test_codec.py
+uv run python -m pytest tests/test_codec.py
 ```
