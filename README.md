@@ -12,7 +12,7 @@ qraudio uses AFSK/GFSK/MFSK modulation with HDLC framing, CRC-16 integrity check
 |---|---|
 | [`packages/js`](packages/js/README.md) | TypeScript/JavaScript implementation — universal core, Node.js WAV helpers, browser AudioBuffer + AudioWorklet integration, and a CLI |
 | [`packages/python`](packages/python/README.md) | Python implementation — core encode/decode/scan, WAV helpers, file I/O, and a CLI |
-| `packages/example` | Vite + WebSocket demo app |
+| [`packages/example`](packages/example/README.md) | Vite + WebSocket demo app |
 
 Both implementations are cross-compatible: audio encoded by one can be decoded by the other.
 
