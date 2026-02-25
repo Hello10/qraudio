@@ -17,15 +17,17 @@ describe("prepend payload", () => {
   test("prepends payload with padding", () => {
     const sampleRate = 48000;
     const baseSamples = makeTone(sampleRate, 1.0);
-    const baseWav = encodeWavSamples(baseSamples, sampleRate, "pcm16");
+    const baseWav = encodeWavSamples({ samples: baseSamples, sampleRate, format: "pcm16" });
 
     const payload = { __type: "test", value: 123 };
-    const result = prependPayloadToWav(baseWav, payload, {
+    const result = prependPayloadToWav({
+      wav: baseWav,
+      json: payload,
       padSeconds: 0.25,
       profile: DEFAULT_PROFILE,
     });
 
-    const detections = scanWav(result.wav, { profile: DEFAULT_PROFILE });
+    const detections = scanWav({ wav: result.wav, profile: DEFAULT_PROFILE });
     expect(detections.length).toBeGreaterThan(0);
     expect(detections[0].json).toEqual(payload);
   });

@@ -17,16 +17,16 @@ def make_tone(sample_rate: int, seconds: float, freq: float = 440) -> list[float
 def test_prepend_payload_with_padding() -> None:
     sample_rate = 48000
     base_samples = make_tone(sample_rate, 1.0)
-    base_wav = encodeWavSamples(base_samples, sample_rate, "pcm16")
+    base_wav = encodeWavSamples(samples=base_samples, sample_rate=sample_rate, fmt="pcm16")
 
     payload = {"__type": "test", "value": 123}
     result = prependPayloadToWav(
-        base_wav,
-        payload,
+        wav_bytes=base_wav,
+        payload=payload,
         pad_seconds=0.25,
         profile=DEFAULT_PROFILE,
     )
 
-    detections = scanWav(result.wav, profile=DEFAULT_PROFILE)
+    detections = scanWav(wav_bytes=result.wav, profile=DEFAULT_PROFILE)
     assert len(detections) > 0
     assert detections[0].json == payload

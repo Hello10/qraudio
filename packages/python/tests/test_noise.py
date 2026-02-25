@@ -31,12 +31,12 @@ def add_white_noise(samples: list[float], snr_db: float, seed: int = 42) -> list
 
 def test_scan_with_moderate_noise() -> None:
     payload = {"__type": "noise", "value": 1}
-    encoded = encode(payload, profile=DEFAULT_PROFILE)
+    encoded = encode(payload=payload, profile=DEFAULT_PROFILE)
     noisy = add_white_noise(encoded.samples, 15)
 
     silence = [0.0] * round(encoded.sampleRate * 0.2)
     combined = silence + noisy + silence
 
-    results = scan(combined, sample_rate=encoded.sampleRate, profile=DEFAULT_PROFILE)
+    results = scan(samples=combined, sample_rate=encoded.sampleRate, profile=DEFAULT_PROFILE)
     assert len(results) > 0
     assert results[0].json == payload

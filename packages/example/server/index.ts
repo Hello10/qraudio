@@ -36,7 +36,8 @@ function buildSequence() {
   const { payload } = RANDOM_PAYLOADS ? buildRandomPayload(sequenceId) : buildFixedPayload(sequenceId);
   sequenceId += 1;
 
-  const result = encode(payload, {
+  const result = encode({
+    json: payload,
     sampleRate: SAMPLE_RATE,
     profile: PROFILE,
     gzip: false,

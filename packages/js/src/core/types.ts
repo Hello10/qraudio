@@ -2,6 +2,7 @@ import type { Profile } from "./profiles.js";
 export type { Profile };
 
 export interface EncodeOptions {
+  json: unknown;
   sampleRate?: number;
   profile?: Profile;
   fec?: boolean;
@@ -29,6 +30,7 @@ export interface EncodeResult {
 }
 
 export interface DecodeOptions {
+  samples: Float32Array;
   sampleRate?: number;
   profile?: Profile;
   gzipDecompress?: (data: Uint8Array) => Uint8Array;
@@ -46,4 +48,4 @@ export interface ScanOptions extends DecodeOptions {
   minConfidence?: number;
 }
 
-export interface ScanResult extends DecodeResult {}
+export interface ScanResult extends DecodeResult { }

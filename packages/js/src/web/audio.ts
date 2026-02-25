@@ -5,32 +5,39 @@ export interface EncodeAudioBufferOptions extends EncodeOptions {
   context?: BaseAudioContext;
 }
 
+export interface DecodeAudioBufferOptions extends DecodeOptions {
+  buffer: AudioBuffer;
+}
+
+export interface ScanAudioBufferOptions extends ScanOptions {
+  buffer: AudioBuffer;
+}
+
 export function encodeAudioBuffer(
-  json: unknown,
-  options: EncodeAudioBufferOptions = {}
+  options: EncodeAudioBufferOptions
 ): { buffer: AudioBuffer; result: EncodeResult } {
   const context = options.context ?? getDefaultAudioContext();
   const sampleRate = options.sampleRate ?? context.sampleRate;
-  const result = encode(json, { ...options, sampleRate });
+  const result = encode({ ...options, sampleRate });
   const buffer = context.createBuffer(1, result.samples.length, sampleRate);
   buffer.getChannelData(0).set(result.samples);
   return { buffer, result };
 }
 
 export function decodeAudioBuffer(
-  buffer: AudioBuffer,
-  options: DecodeOptions = {}
+  options: DecodeAudioBufferOptions
 ): DecodeResult {
+  const { buffer, ...rest } = options;
   const samples = audioBufferToMono(buffer);
-  return decode(samples, { ...options, sampleRate: options.sampleRate ?? buffer.sampleRate });
+  return decode({ ...rest, samples, sampleRate: rest.sampleRate ?? buffer.sampleRate });
 }
 
 export function scanAudioBuffer(
-  buffer: AudioBuffer,
-  options: ScanOptions = {}
+  options: ScanAudioBufferOptions
 ): ScanResult[] {
+  const { buffer, ...rest } = options;
   const samples = audioBufferToMono(buffer);
-  return scan(samples, { ...options, sampleRate: options.sampleRate ?? buffer.sampleRate });
+  return scan({ ...rest, samples, sampleRate: rest.sampleRate ?? buffer.sampleRate });
 }
 
 export function audioBufferToMono(buffer: AudioBuffer): Float32Array {

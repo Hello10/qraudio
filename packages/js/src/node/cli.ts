@@ -5,7 +5,7 @@ import { encodeWavFile, decodeWavFile, scanWavFile, prependPayloadToWavFile } fr
 import { decodeWav, scanWav } from "./wav.js";
 import { DEFAULT_PROFILE, PROFILE_NAMES, isProfile } from "../core/profiles.js";
 import type { Profile } from "../core/types.js";
-import type { EncodeWavOptions } from "./wav.js";
+import type { EncodeWavFileOptions } from "./fs.js";
 
 const PROFILE_OPTIONS = PROFILE_NAMES.join("|");
 
@@ -71,15 +71,15 @@ async function main() {
     const outPath = requiredArg(args, "out");
     const payload = JSON.parse(jsonText);
 
-    const options: EncodeWavOptions = {
+    await encodeWavFile({
+      path: outPath,
+      json: payload,
       profile: parseProfile(args.profile),
       sampleRate: parseNumber(args["sample-rate"]),
       wavFormat: parseWavFormat(args["wav-format"]),
       gzip: parseGzipMode(args.gzip),
       fec: parseBoolMode(args.fec),
-    };
-
-    await encodeWavFile(outPath, payload, options);
+    });
     console.log(`Wrote ${resolve(outPath)}`);
     return;
   }
@@ -89,7 +89,7 @@ async function main() {
     const outPath = args.out;
     const result = await (inPath === "-"
       ? decodeFromBytes(await readStdinBytes(), args)
-      : decodeWavFile(inPath, { profile: parseProfile(args.profile) }));
+      : decodeWavFile({ path: inPath, profile: parseProfile(args.profile) }));
     const text = formatJson(result.json, args);
     if (outPath) {
       await writeFile(outPath, text);
@@ -105,7 +105,7 @@ async function main() {
     const outPath = args.out;
     const results = await (inPath === "-"
       ? scanFromBytes(await readStdinBytes(), args)
-      : scanWavFile(inPath, { profile: parseProfile(args.profile) }));
+      : scanWavFile({ path: inPath, profile: parseProfile(args.profile) }));
     const format = parseFormat(args.format);
     const text = formatScanResults(results, format, args);
     if (outPath) {
@@ -123,7 +123,10 @@ async function main() {
     const jsonText = await readJsonInput(args);
     const payload = JSON.parse(jsonText);
 
-    const options = {
+    await prependPayloadToWavFile({
+      inputPath: inPath,
+      outputPath: outPath,
+      json: payload,
       profile: parseProfile(args.profile),
       wavFormat: parseWavFormat(args["wav-format"]),
       gzip: parseGzipMode(args.gzip),
@@ -131,9 +134,7 @@ async function main() {
       padSeconds: parseNumber(args.pad),
       prePadSeconds: parseNumber(args["pre-pad"]),
       postPadSeconds: parseNumber(args["post-pad"]),
-    };
-
-    await prependPayloadToWavFile(inPath, outPath, payload, options);
+    });
     console.log(`Wrote ${resolve(outPath)}`);
     return;
   }
@@ -256,14 +257,14 @@ async function decodeFromBytes(
   wavBytes: Uint8Array,
   args: Record<string, string | undefined>
 ): Promise<{ json: unknown }> {
-  return decodeWav(wavBytes, { profile: parseProfile(args.profile) });
+  return decodeWav({ wav: wavBytes, profile: parseProfile(args.profile) });
 }
 
 async function scanFromBytes(
   wavBytes: Uint8Array,
   args: Record<string, string | undefined>
 ): Promise<Awaited<ReturnType<typeof scanWavFile>>> {
-  return scanWav(wavBytes, { profile: parseProfile(args.profile) });
+  return scanWav({ wav: wavBytes, profile: parseProfile(args.profile) });
 }
 
 main().catch((err) => {

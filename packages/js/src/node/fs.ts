@@ -1,51 +1,47 @@
 import { readFile, writeFile } from "node:fs/promises";
 import type { DecodeOptions, DecodeResult, EncodeOptions, EncodeResult, ScanOptions, ScanResult } from "../core/index.js";
 import { decodeWavSamples, encodeWavSamples, encodeWav, decodeWav, scanWav, prependPayloadToWav } from "./wav.js";
-import type { WavFormat, WavData, EncodeWavOptions, EncodeWavResult, PrependWavOptions, PrependWavResult } from "./wav.js";
+import type { WavFormat, WavData, EncodeWavOptions, EncodeWavResult, PrependWavOptions, PrependWavResult, DecodeWavOptions, ScanWavOptions, EncodeWavSamplesOptions, DecodeWavSamplesOptions } from "./wav.js";
 
-export async function readWavFile(path: string): Promise<WavData> {
-  const data = await readFile(path);
-  return decodeWavSamples(data);
+export interface ReadWavFileOptions { path: string; }
+export interface WriteWavFileOptions { path: string; wav: Uint8Array; }
+export interface EncodeWavFileOptions extends Omit<EncodeWavOptions, "json"> { path: string; json: unknown; }
+export interface DecodeWavFileOptions extends Omit<DecodeWavOptions, "wav"> { path: string; }
+export interface ScanWavFileOptions extends Omit<ScanWavOptions, "wav"> { path: string; }
+export interface PrependWavFileOptions extends Omit<PrependWavOptions, "wav"> { inputPath: string; outputPath: string; }
+
+export async function readWavFile(options: ReadWavFileOptions): Promise<WavData> {
+  const data = await readFile(options.path);
+  return decodeWavSamples({ wav: data });
 }
 
-export async function writeWavFile(path: string, wav: Uint8Array): Promise<void> {
-  await writeFile(path, wav);
+export async function writeWavFile(options: WriteWavFileOptions): Promise<void> {
+  await writeFile(options.path, options.wav);
 }
 
-export async function encodeWavFile(
-  path: string,
-  json: unknown,
-  options: EncodeWavOptions = {}
-): Promise<EncodeWavResult> {
-  const result = encodeWav(json, options);
+export async function encodeWavFile(options: EncodeWavFileOptions): Promise<EncodeWavResult> {
+  const { path, ...rest } = options;
+  const result = encodeWav(rest);
   await writeFile(path, result.wav);
   return result;
 }
 
-export async function decodeWavFile(
-  path: string,
-  options: DecodeOptions = {}
-): Promise<DecodeResult> {
+export async function decodeWavFile(options: DecodeWavFileOptions): Promise<DecodeResult> {
+  const { path, ...rest } = options;
   const data = await readFile(path);
-  return decodeWav(data, options);
+  return decodeWav({ ...rest, wav: data });
 }
 
-export async function scanWavFile(
-  path: string,
-  options: ScanOptions = {}
-): Promise<ScanResult[]> {
+export async function scanWavFile(options: ScanWavFileOptions): Promise<ScanResult[]> {
+  const { path, ...rest } = options;
   const data = await readFile(path);
-  return scanWav(data, options);
+  return scanWav({ ...rest, wav: data });
 }
 
-export async function prependPayloadToWavFile(
-  inputPath: string,
-  outputPath: string,
-  json: unknown,
-  options: PrependWavOptions = {}
-): Promise<PrependWavResult> {
+export async function prependPayloadToWavFile(options: PrependWavFileOptions): Promise<PrependWavResult> {
+  const { inputPath, outputPath, ...rest } = options;
   const data = await readFile(inputPath);
-  const result = prependPayloadToWav(data, json, options);
+  const result = prependPayloadToWav({ ...rest, wav: data });
   await writeFile(outputPath, result.wav);
   return result;
 }
@@ -58,6 +54,10 @@ export type {
   EncodeWavResult,
   PrependWavOptions,
   PrependWavResult,
+  DecodeWavOptions,
+  ScanWavOptions,
+  EncodeWavSamplesOptions,
+  DecodeWavSamplesOptions,
   EncodeOptions,
   EncodeResult,
   DecodeOptions,

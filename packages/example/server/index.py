@@ -130,7 +130,7 @@ def build_sequence() -> tuple[dict[str, Any], list[float]]:
     payload = build_random_payload(sequence_id) if RANDOM_PAYLOADS else build_fixed_payload(sequence_id)
     sequence_id += 1
 
-    result = encode(payload, sample_rate=SAMPLE_RATE, profile=PROFILE, gzip=False)
+    result = encode(payload=payload, sample_rate=SAMPLE_RATE, profile=PROFILE, gzip=False)
 
     leading_silence_samples = round((SILENCE_MS / 1000.0) * SAMPLE_RATE)
     trailing_silence_samples = round(((SILENCE_MS + GAP_MS) / 1000.0) * SAMPLE_RATE)

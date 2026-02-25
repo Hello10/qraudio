@@ -20,8 +20,8 @@ from .types import EncodeResult
 
 
 def encode(
-    payload: object,
     *,
+    payload: object,
     sample_rate: Optional[int] = None,
     profile: Optional[Union[Profile, str]] = None,
     fec: bool = True,

@@ -28,7 +28,7 @@ function addWhiteNoise(samples, snrDb, seed = 42) {
 describe("robustness", () => {
   test("scan works with moderate noise", () => {
     const payload = { __type: "noise", value: 1 };
-    const encoded = encode(payload, { profile: DEFAULT_PROFILE });
+    const encoded = encode({ json: payload, profile: DEFAULT_PROFILE });
     const noisy = addWhiteNoise(encoded.samples, 15);
 
     const silence = new Float32Array(Math.round(encoded.sampleRate * 0.2));
@@ -37,7 +37,7 @@ describe("robustness", () => {
     combined.set(noisy, silence.length);
     combined.set(silence, silence.length + noisy.length);
 
-    const results = scan(combined, { sampleRate: encoded.sampleRate, profile: DEFAULT_PROFILE });
+    const results = scan({ samples: combined, sampleRate: encoded.sampleRate, profile: DEFAULT_PROFILE });
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].json).toEqual(payload);
   });

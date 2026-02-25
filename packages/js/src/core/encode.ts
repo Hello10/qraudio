@@ -13,8 +13,10 @@ import { mfskBitsToSamples } from "./codec/mfskModem.js";
 import { DEFAULT_PROFILE } from "./profiles.js";
 import type { EncodeOptions, EncodeResult } from "./types.js";
 
-export function encode(json: unknown, options: EncodeOptions = {}): EncodeResult {
+export function encode(options: EncodeOptions): EncodeResult {
+  const { json } = options;
   const sampleRate = options.sampleRate ?? DEFAULT_SAMPLE_RATE;
+
   const profile = options.profile ?? DEFAULT_PROFILE;
   const profileSettings = getProfileSettings(profile);
   const baud = profileSettings.baud;

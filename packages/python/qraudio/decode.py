@@ -21,14 +21,14 @@ from .types import DecodeResult, ScanResult
 
 
 def decode(
-    samples: list[float],
     *,
+    samples: list[float],
     sample_rate: Optional[int] = None,
     profile: Optional[Union[Profile, str]] = None,
     gzip_decompress: Optional[Callable[[bytes], bytes]] = None,
 ) -> DecodeResult:
     results = scan(
-        samples,
+        samples=samples,
         sample_rate=sample_rate,
         profile=profile,
         min_confidence=0.9,
@@ -40,13 +40,14 @@ def decode(
 
 
 def scan(
-    samples: list[float],
     *,
+    samples: list[float],
     sample_rate: Optional[int] = None,
     profile: Optional[Union[Profile, str]] = None,
     min_confidence: float = 0.8,
     gzip_decompress: Optional[Callable[[bytes], bytes]] = None,
 ) -> list[ScanResult]:
+
     resolved_sample_rate = sample_rate or DEFAULT_SAMPLE_RATE
     if profile is not None:
         profiles: list[Profile] = [normalizeProfile(profile)]

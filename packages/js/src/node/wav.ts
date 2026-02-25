@@ -15,11 +15,31 @@ export interface EncodeWavOptions extends EncodeOptions {
   wavFormat?: WavFormat;
 }
 
+export interface DecodeWavOptions extends Omit<DecodeOptions, "samples"> {
+  wav: Uint8Array;
+}
+
+export interface ScanWavOptions extends Omit<ScanOptions, "samples"> {
+  wav: Uint8Array;
+}
+
 export interface EncodeWavResult extends EncodeResult {
   wav: Uint8Array;
 }
 
-export interface PrependWavOptions extends EncodeWavOptions {
+export interface EncodeWavSamplesOptions {
+  samples: Float32Array;
+  sampleRate: number;
+  format?: WavFormat;
+}
+
+export interface DecodeWavSamplesOptions {
+  wav: Uint8Array;
+}
+
+export interface PrependWavOptions extends Omit<EncodeWavOptions, "json"> {
+  wav: Uint8Array;
+  json: unknown;
   padSeconds?: number;
   prePadSeconds?: number;
   postPadSeconds?: number;
@@ -31,40 +51,39 @@ export interface PrependWavResult {
   sampleRate: number;
 }
 
-export function encodeWav(json: unknown, options: EncodeWavOptions = {}): EncodeWavResult {
-  const result = encode(json, withNodeGzip(options));
+export function encodeWav(options: EncodeWavOptions): EncodeWavResult {
   const wavFormat = options.wavFormat ?? "pcm16";
-  const wav = encodeWavSamples(result.samples, result.sampleRate, wavFormat);
+  const result = encode(withNodeGzip(options));
+  const wav = encodeWavSamples({ samples: result.samples, sampleRate: result.sampleRate, format: wavFormat });
   return { ...result, wav };
 }
 
-export function decodeWav(wav: Uint8Array, options: DecodeOptions = {}): DecodeResult {
-  const data = decodeWavSamples(wav);
-  return decode(data.samples, withNodeGunzip({ ...options, sampleRate: options.sampleRate ?? data.sampleRate }));
+export function decodeWav(options: DecodeWavOptions): DecodeResult {
+  const { wav, ...rest } = options;
+  const data = decodeWavSamples({ wav });
+  return decode(withNodeGunzip({ ...rest, samples: data.samples, sampleRate: rest.sampleRate ?? data.sampleRate }));
 }
 
-export function scanWav(wav: Uint8Array, options: ScanOptions = {}): ScanResult[] {
-  const data = decodeWavSamples(wav);
-  return scan(data.samples, withNodeGunzip({ ...options, sampleRate: options.sampleRate ?? data.sampleRate }));
+export function scanWav(options: ScanWavOptions): ScanResult[] {
+  const { wav, ...rest } = options;
+  const data = decodeWavSamples({ wav });
+  return scan(withNodeGunzip({ ...rest, samples: data.samples, sampleRate: rest.sampleRate ?? data.sampleRate }));
 }
 
-export function prependPayloadToWav(
-  wav: Uint8Array,
-  json: unknown,
-  options: PrependWavOptions = {}
-): PrependWavResult {
-  const input = decodeWavSamples(wav);
-  const sampleRate = options.sampleRate ?? input.sampleRate;
+export function prependPayloadToWav(options: PrependWavOptions): PrependWavResult {
+  const { wav, json, ...rest } = options;
+  const input = decodeWavSamples({ wav });
+  const sampleRate = rest.sampleRate ?? input.sampleRate;
   if (sampleRate !== input.sampleRate) {
     throw new Error(
       `Sample rate mismatch: input ${input.sampleRate} Hz, requested ${sampleRate} Hz. Resampling not supported.`
     );
   }
 
-  const payload = encode(json, withNodeGzip({ ...options, sampleRate }));
-  const padSeconds = options.padSeconds ?? 0.25;
-  const prePadSeconds = options.prePadSeconds ?? padSeconds;
-  const postPadSeconds = options.postPadSeconds ?? padSeconds;
+  const payload = encode(withNodeGzip({ ...rest, json, sampleRate }));
+  const padSeconds = rest.padSeconds ?? 0.25;
+  const prePadSeconds = rest.prePadSeconds ?? padSeconds;
+  const postPadSeconds = rest.postPadSeconds ?? padSeconds;
   const prePadSamples = secondsToSamples(sampleRate, prePadSeconds);
   const postPadSamples = secondsToSamples(sampleRate, postPadSeconds);
 
@@ -74,16 +93,13 @@ export function prependPayloadToWav(
   combined.set(payload.samples, prePadSamples);
   combined.set(input.samples, prePadSamples + payload.samples.length + postPadSamples);
 
-  const wavFormat = options.wavFormat ?? "pcm16";
-  const wavOut = encodeWavSamples(combined, sampleRate, wavFormat);
+  const wavFormat = rest.wavFormat ?? "pcm16";
+  const wavOut = encodeWavSamples({ samples: combined, sampleRate, format: wavFormat });
   return { wav: wavOut, payload, sampleRate };
 }
 
-export function encodeWavSamples(
-  samples: Float32Array,
-  sampleRate: number,
-  format: WavFormat = "pcm16"
-): Uint8Array {
+export function encodeWavSamples(options: EncodeWavSamplesOptions): Uint8Array {
+  const { samples, sampleRate, format = "pcm16" } = options;
   const numChannels = 1;
   const bitsPerSample = format === "float32" ? 32 : 16;
   const bytesPerSample = bitsPerSample / 8;
@@ -128,7 +144,8 @@ export function encodeWavSamples(
   return new Uint8Array(buffer);
 }
 
-export function decodeWavSamples(wav: Uint8Array): WavData {
+export function decodeWavSamples(options: DecodeWavSamplesOptions): WavData {
+  const { wav } = options;
   const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
   if (readString(view, 0, 4) !== "RIFF" || readString(view, 8, 4) !== "WAVE") {
     throw new Error("Invalid WAV header");

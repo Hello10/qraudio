@@ -102,7 +102,8 @@ async function setupWorkletScanner(newMeta: { sampleRate: number; profile: strin
     workletHandle.disconnect();
     workletHandle = null;
   }
-  workletHandle = await createStreamScannerNode(audioContext, {
+  workletHandle = await createStreamScannerNode({
+    context: audioContext,
     sampleRate: audioContext.sampleRate,
     profile: normalizeProfile(newMeta.profile),
     scanIntervalMs: SCAN_INTERVAL_MS,

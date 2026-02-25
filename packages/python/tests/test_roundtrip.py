@@ -11,22 +11,22 @@ def test_roundtrip() -> None:
 
     for profile in PROFILE_NAMES:
         for payload in payloads:
-            encoded = encode(payload, profile=profile)
+            encoded = encode(payload=payload, profile=profile)
             decoded = decode(
-                encoded.samples,
+                samples=encoded.samples,
                 sample_rate=encoded.sampleRate,
                 profile=profile,
             )
             assert decoded.json == payload
 
             encoded_gzip = encode(
-                payload,
+                payload=payload,
                 profile=profile,
                 gzip=True,
                 gzip_compress=gzip.compress,
             )
             decoded_gzip = decode(
-                encoded_gzip.samples,
+                samples=encoded_gzip.samples,
                 sample_rate=encoded_gzip.sampleRate,
                 profile=profile,
                 gzip_decompress=gzip.decompress,
@@ -36,13 +36,13 @@ def test_roundtrip() -> None:
             silence = [0.0] * round(encoded.sampleRate * 0.2)
             combined = silence + encoded.samples + silence
             results = scan(
-                combined,
+                samples=combined,
                 sample_rate=encoded.sampleRate,
                 profile=profile,
             )
             assert len(results) > 0
             assert results[0].json == payload
 
-            wav_result = encodeWav(payload, profile=profile)
-            wav_decoded = decodeWav(wav_result.wav, profile=profile)
+            wav_result = encodeWav(payload=payload, profile=profile)
+            wav_decoded = decodeWav(wav_bytes=wav_result.wav, profile=profile)
             assert wav_decoded.json == payload

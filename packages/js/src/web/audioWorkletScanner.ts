@@ -3,6 +3,7 @@ import type { ScanResult } from "../core/index.js";
 import type { StreamScannerOptions } from "./streamScanner.js";
 
 export interface StreamScannerNodeOptions extends StreamScannerOptions {
+  context: BaseAudioContext;
   workletUrl?: string | URL;
   chunkSize?: number;
   scanInWorklet?: boolean;
@@ -17,9 +18,9 @@ export interface StreamScannerNodeHandle {
 }
 
 export async function createStreamScannerNode(
-  context: BaseAudioContext,
-  options: StreamScannerNodeOptions = {}
+  options: StreamScannerNodeOptions
 ): Promise<StreamScannerNodeHandle> {
+  const context = options.context;
   const workletUrl = options.workletUrl ?? getStreamCaptureWorkletUrl();
   const url = workletUrl instanceof URL ? workletUrl.href : workletUrl;
   await context.audioWorklet.addModule(url);
@@ -36,9 +37,9 @@ export async function createStreamScannerNode(
   const scanInWorklet = options.scanInWorklet ?? true;
   const scanner = scanInWorklet
     ? new StreamScanner({
-        ...options,
-        sampleRate: options.sampleRate ?? context.sampleRate,
-      })
+      ...options,
+      sampleRate: options.sampleRate ?? context.sampleRate,
+    })
     : undefined;
 
   node.port.onmessage = (event) => {

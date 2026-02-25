@@ -12,15 +12,16 @@ import { rsDecode, rsEncode } from "./codec/reedSolomonCodec.js";
 import { PROFILE_NAMES } from "./profiles.js";
 import type { DecodeOptions, DecodeResult, Profile, ScanOptions, ScanResult } from "./types.js";
 
-export function decode(samples: Float32Array, options: DecodeOptions = {}): DecodeResult {
-  const results = scan(samples, { ...options, minConfidence: 0.9 });
+export function decode(options: DecodeOptions): DecodeResult {
+  const results = scan({ ...options, minConfidence: 0.9 });
   if (results.length === 0) {
     throw new Error("No valid frame found");
   }
   return results[0];
 }
 
-export function scan(samples: Float32Array, options: ScanOptions = {}): ScanResult[] {
+export function scan(options: ScanOptions): ScanResult[] {
+  const { samples } = options;
   const sampleRate = options.sampleRate ?? DEFAULT_SAMPLE_RATE;
   const profiles: Profile[] = options.profile ? [options.profile] : [...PROFILE_NAMES];
   const minConfidence = options.minConfidence ?? 0.8;

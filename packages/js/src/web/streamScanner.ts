@@ -2,7 +2,7 @@ import { scan } from "../core/index.js";
 import { ProfileName } from "../core/profiles.js";
 import type { ScanOptions, ScanResult } from "../core/index.js";
 
-export interface StreamScannerOptions extends ScanOptions {
+export interface StreamScannerOptions extends Omit<ScanOptions, "samples"> {
   maxBufferMs?: number;
   minBufferMs?: number;
   dedupeMs?: number;
@@ -31,7 +31,7 @@ export class StreamScanner {
     this.reset();
   }
 
-  updateOptions(options: Partial<StreamScannerOptions>): void {
+  updateOptions(options: Partial<Omit<StreamScannerOptions, "samples">>): void {
     this.options = { ...this.options, ...options };
     if (options.sampleRate) {
       this.sampleRate = options.sampleRate;
@@ -75,7 +75,8 @@ export class StreamScanner {
       this.samplesSinceScan = 0;
     }
 
-    const results = scan(this.buffer, {
+    const results = scan({
+      samples: this.buffer,
       sampleRate: this.sampleRate,
       profile: this.options.profile,
       minConfidence: this.options.minConfidence,

@@ -12,13 +12,13 @@ WavFormat = Literal["pcm16", "float32"]
 
 
 def encodeWav(
-    payload: object,
     *,
+    payload: object,
     wav_format: WavFormat = "pcm16",
     **encode_options,
 ) -> EncodeWavResult:
-    result = encode(payload, **encode_options)
-    wav = encodeWavSamples(result.samples, result.sampleRate, wav_format)
+    result = encode(payload=payload, **encode_options)
+    wav = encodeWavSamples(samples=result.samples, sample_rate=result.sampleRate, fmt=wav_format)
     return EncodeWavResult(
         sampleRate=result.sampleRate,
         profile=result.profile,
@@ -30,16 +30,16 @@ def encodeWav(
 
 
 def decodeWav(
-    wav_bytes: bytes,
     *,
+    wav_bytes: bytes,
     sample_rate: Optional[int] = None,
     profile: Optional[Union[Profile, str]] = None,
     **options,
 ) -> DecodeResult:
-    data = decodeWavSamples(wav_bytes)
+    data = decodeWavSamples(wav_bytes=wav_bytes)
     resolved_profile = normalizeProfile(profile) if profile is not None else None
     return decode(
-        data.samples,
+        samples=data.samples,
         sample_rate=sample_rate or data.sampleRate,
         profile=resolved_profile,
         **options,
@@ -47,16 +47,16 @@ def decodeWav(
 
 
 def scanWav(
-    wav_bytes: bytes,
     *,
+    wav_bytes: bytes,
     sample_rate: Optional[int] = None,
     profile: Optional[Union[Profile, str]] = None,
     **options,
 ) -> list[ScanResult]:
-    data = decodeWavSamples(wav_bytes)
+    data = decodeWavSamples(wav_bytes=wav_bytes)
     resolved_profile = normalizeProfile(profile) if profile is not None else None
     return scan(
-        data.samples,
+        samples=data.samples,
         sample_rate=sample_rate or data.sampleRate,
         profile=resolved_profile,
         **options,
@@ -64,23 +64,23 @@ def scanWav(
 
 
 def prependPayloadToWav(
+    *,
     wav_bytes: bytes,
     payload: object,
-    *,
     pad_seconds: float = 0.25,
     pre_pad_seconds: Optional[float] = None,
     post_pad_seconds: Optional[float] = None,
     wav_format: WavFormat = "pcm16",
     **encode_options,
 ) -> PrependWavResult:
-    input_data = decodeWavSamples(wav_bytes)
+    input_data = decodeWavSamples(wav_bytes=wav_bytes)
     sample_rate = encode_options.get("sample_rate", input_data.sampleRate)
     if sample_rate != input_data.sampleRate:
         raise ValueError(
             f"Sample rate mismatch: input {input_data.sampleRate} Hz, requested {sample_rate} Hz. Resampling not supported."
         )
 
-    payload_result = encode(payload, sample_rate=sample_rate, **encode_options)
+    payload_result = encode(payload=payload, sample_rate=sample_rate, **encode_options)
     pre_pad = pad_seconds if pre_pad_seconds is None else pre_pad_seconds
     post_pad = pad_seconds if post_pad_seconds is None else post_pad_seconds
 
@@ -94,11 +94,11 @@ def prependPayloadToWav(
     offset = pre_samples + len(payload_result.samples) + post_samples
     combined[offset : offset + len(input_data.samples)] = input_data.samples
 
-    wav_out = encodeWavSamples(combined, sample_rate, wav_format)
+    wav_out = encodeWavSamples(samples=combined, sample_rate=sample_rate, fmt=wav_format)
     return PrependWavResult(wav=wav_out, payload=payload_result, sampleRate=sample_rate)
 
 
-def encodeWavSamples(samples: list[float], sample_rate: int, fmt: WavFormat = "pcm16") -> bytes:
+def encodeWavSamples(*, samples: list[float], sample_rate: int, fmt: WavFormat = "pcm16") -> bytes:
     num_channels = 1
     bits_per_sample = 32 if fmt == "float32" else 16
     bytes_per_sample = bits_per_sample // 8
@@ -138,7 +138,7 @@ def encodeWavSamples(samples: list[float], sample_rate: int, fmt: WavFormat = "p
     return bytes(buffer)
 
 
-def decodeWavSamples(wav_bytes: bytes) -> WavData:
+def decodeWavSamples(*, wav_bytes: bytes) -> WavData:
     if len(wav_bytes) < 12:
         raise ValueError("Invalid WAV header")
     if wav_bytes[0:4] != b"RIFF" or wav_bytes[8:12] != b"WAVE":

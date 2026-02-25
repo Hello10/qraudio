@@ -74,7 +74,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         if args.command == "encode":
             payload = _read_json(args.payload_file)
             result = encodeWav(
-                payload,
+                payload=payload,
                 profile=args.profile,
                 wav_format=args.wav_format,
                 gzip=args.gzip,
@@ -85,13 +85,13 @@ def main(argv: Optional[list[str]] = None) -> int:
 
         if args.command == "decode":
             wav_bytes = _read_wav(args.in_path)
-            decoded = decodeWav(wav_bytes, profile=args.profile)
+            decoded = decodeWav(wav_bytes=wav_bytes, profile=args.profile)
             sys.stdout.write(json.dumps(decoded.json))
             return 0
 
         if args.command == "scan":
             wav_bytes = _read_wav(args.in_path)
-            results = scanWav(wav_bytes, profile=args.profile)
+            results = scanWav(wav_bytes=wav_bytes, profile=args.profile)
             payloads = [result.json for result in results]
             sys.stdout.write(json.dumps(payloads))
             return 0
@@ -100,8 +100,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             wav_bytes = _read_wav(args.in_path)
             payload = _read_json(args.payload_file)
             result = prependPayloadToWav(
-                wav_bytes,
-                payload,
+                wav_bytes=wav_bytes,
+                payload=payload,
                 profile=args.profile,
                 wav_format=args.wav_format,
                 pad_seconds=args.pad_seconds,
