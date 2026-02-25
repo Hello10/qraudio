@@ -1,0 +1,27 @@
+{
+  "name": "qraudio-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm dev:node",
+    "dev:node": "pnpm --filter qraudio build && concurrently -k \"pnpm --filter qraudio dev\" \"./run_server.sh node\" \"vite\"",
+    "dev:py": "pnpm --filter qraudio build && concurrently -k \"pnpm --filter qraudio dev\" \"./run_server.sh python\" \"vite\"",
+    "server": "./run_server.sh node",
+    "server:py": "./run_server.sh python",
+    "client": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.6.0",
+    "qraudio": "workspace:*",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.4.11"
+  }
+}

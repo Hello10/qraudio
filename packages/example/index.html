@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QRAudio Example</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>QRAudio WebSocket Demo</h1>
+        <p>Streams an encoded snippet over WebSocket and decodes it in the browser.</p>
+      </header>
+      <section class="controls">
+        <button id="connect">Connect</button>
+        <button id="disconnect" disabled>Disconnect</button>
+        <span id="status">Disconnected</span>
+        <div class="mode-toggle" role="group" aria-label="Scanner mode">
+          <span>Scanner</span>
+          <label class="mode-option">
+            <input type="radio" name="mode" value="main" checked />
+            Main thread
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="mode" value="worklet" />
+            AudioWorklet
+          </label>
+        </div>
+        <label class="monitor-toggle">
+          <input type="checkbox" id="monitor" />
+          Monitor audio
+        </label>
+        <span id="worklet-status" class="worklet-status">Worklet: off</span>
+      </section>
+      <section class="grid">
+        <div class="panel">
+          <h2>Detections</h2>
+          <pre id="detections"></pre>
+        </div>
+        <div class="panel">
+          <h2>Stream Log</h2>
+          <pre id="log"></pre>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
