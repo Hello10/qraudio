@@ -8,7 +8,7 @@ QRAudio encodes JSON into a short AFSK audio burst using Bell 202 tones (1200/22
 
 ## Packages 
 - packages/js: JS/TS reference implementation
-- packages/python: Python reference implementation (stubs for now)
+- packages/python: Python reference implementation
 - packages/example: Vite + WebSocket demo app
 
 ## Spec
@@ -30,15 +30,15 @@ from qraudio import decode, encode, scan
 
 ## CLI
 ```bash
-qraudio encode --json '{"url":"https://example.com"}' --out out.wav
+qraudio encode --file payload.json --out out.wav
 qraudio decode --in out.wav
 qraudio scan --in out.wav
-qraudio prepend --in input.wav --json '{"url":"https://example.com"}' --out output.wav --pad 0.25
+qraudio prepend --in input.wav --file payload.json --out output.wav --pad-seconds 0.25
 ```
 
 You can also pipe input/output:
 ```bash
-cat payload.json | qraudio encode --stdin --out out.wav
-cat out.wav | qraudio decode --in -
-cat out.wav | qraudio scan --in - --format jsonl
+cat payload.json | qraudio encode --out out.wav
+cat out.wav | qraudio decode
+cat out.wav | qraudio scan
 ```
