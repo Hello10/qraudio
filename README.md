@@ -25,10 +25,10 @@ Both implementations are cross-compatible: audio encoded by one can be decoded b
 ```ts
 import { encode, decode, scan } from "qraudio";
 
-const result = encode({ url: "https://example.com" });
+const result = encode({ json: { url: "https://example.com" } });
 // result.samples → Float32Array of audio at 48 kHz
 
-const decoded = decode(result.samples);
+const decoded = decode({ samples: result.samples });
 // decoded.json → { url: "https://example.com" }
 ```
 
@@ -36,15 +36,16 @@ Node.js WAV helpers:
 ```ts
 import { encodeWavFile, decodeWavFile } from "qraudio/node";
 
-await encodeWavFile("out.wav", { track: 1 });
-const { json } = await decodeWavFile("out.wav");
+await encodeWavFile({ path: "out.wav", json: { track: 1 } });
+const { json } = await decodeWavFile({ path: "out.wav" });
 ```
 
 Browser / real-time scanning:
 ```ts
 import { createStreamScannerNode } from "qraudio/web";
 
-const handle = await createStreamScannerNode(audioContext, {
+const handle = await createStreamScannerNode({
+  context: audioContext,
   onDetection: (result) => console.log(result.json),
 });
 microphoneSource.connect(handle.node);
@@ -55,10 +56,10 @@ microphoneSource.connect(handle.node);
 ```python
 from qraudio import encode, decode, scan
 
-result = encode({"url": "https://example.com"})
+result = encode(payload={"url": "https://example.com"})
 # result.samples → list[float] at 48 kHz
 
-decoded = decode(result.samples)
+decoded = decode(samples=result.samples)
 # decoded.json → {"url": "https://example.com"}
 ```
 
@@ -66,8 +67,8 @@ WAV helpers:
 ```python
 from qraudio import encodeWavFile, decodeWavFile
 
-encodeWavFile("out.wav", {"track": 1})
-result = decodeWavFile("out.wav")
+encodeWavFile(out_path="out.wav", payload={"track": 1})
+result = decodeWavFile(path="out.wav")
 ```
 
 ---

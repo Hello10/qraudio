@@ -50,14 +50,14 @@ ProfileName.MFSK       // "mfsk"
 
 Works anywhere with no runtime dependencies.
 
-### `encode(json, options?): EncodeResult`
+### `encode(options): EncodeResult`
 
 Encodes a JSON value into a `Float32Array` of mono audio samples.
 
 ```ts
 import { encode } from "qraudio";
 
-const result = encode({ hello: "world" });
+const result = encode({ json: { hello: "world" } });
 // result.samples   → Float32Array
 // result.sampleRate → 48000
 // result.durationMs → ~800
@@ -68,6 +68,7 @@ const result = encode({ hello: "world" });
 
 | Option | Type | Default | Description |
 |---|---|---|---|
+| `json` | `unknown` | — | **Required.** The value to encode |
 | `profile` | `Profile` | `"afsk-bell"` | Modem profile |
 | `sampleRate` | `number` | `48000` | Output sample rate (Hz) |
 | `fec` | `boolean` | `true` | Reed-Solomon forward error correction |
@@ -83,7 +84,7 @@ const result = encode({ hello: "world" });
 
 ---
 
-### `decode(samples, options?): DecodeResult`
+### `decode(options): DecodeResult`
 
 Finds and decodes the first high-confidence payload in a `Float32Array`.  
 Throws if nothing is found.
@@ -91,7 +92,7 @@ Throws if nothing is found.
 ```ts
 import { decode } from "qraudio";
 
-const result = decode(samples);
+const result = decode({ samples });
 // result.json      → decoded value
 // result.profile   → "afsk-bell"
 // result.startSample / endSample → position in sample array
@@ -100,14 +101,14 @@ const result = decode(samples);
 
 ---
 
-### `scan(samples, options?): ScanResult[]`
+### `scan(options): ScanResult[]`
 
 Like `decode`, but returns **all** payloads found in the audio, sorted by position. Returns an empty array when nothing is detected.
 
 ```ts
 import { scan } from "qraudio";
 
-const hits = scan(samples);
+const hits = scan({ samples });
 for (const hit of hits) {
   console.log(hit.json, hit.startSample);
 }
@@ -117,6 +118,7 @@ for (const hit of hits) {
 
 | Option | Type | Description |
 |---|---|---|
+| `samples` | `Float32Array` | **Required.** The audio to decode |
 | `profile` | `Profile` | Narrow search to one profile (faster) |
 | `sampleRate` | `number` | Sample rate of the input |
 | `gzipDecompress` | `(data) => Uint8Array` | Required to decode any gzip-compressed payloads |
@@ -135,16 +137,16 @@ Gzip is wired up automatically using Node's built-in `zlib`.
 import { encodeWav, decodeWav, scanWav, prependPayloadToWav } from "qraudio/node";
 
 // Encode JSON → WAV bytes
-const { wav } = encodeWav({ track: 1 });       // Uint8Array
+const { wav } = encodeWav({ json: { track: 1 } });       // Uint8Array
 
 // Decode WAV bytes → JSON
-const { json } = decodeWav(wavBytes);
+const { json } = decodeWav({ wav: wavBytes });
 
 // Find all payloads in WAV bytes
-const results = scanWav(wavBytes);
+const results = scanWav({ wav: wavBytes });
 
 // Prepend encoded payload before existing audio
-const { wav: out } = prependPayloadToWav(existingWavBytes, { track: 1 });
+const { wav: out } = prependPayloadToWav({ wav: existingWavBytes, json: { track: 1 } });
 ```
 
 `prependPayloadToWav` accepts `padSeconds`, `prePadSeconds`, and `postPadSeconds` options to add silence around the encoded payload.
@@ -161,10 +163,10 @@ import {
   writeWavFile,
 } from "qraudio/node";
 
-await encodeWavFile("output.wav", { hello: "world" });
-const { json } = await decodeWavFile("output.wav");
-const hits = await scanWavFile("output.wav");
-await prependPayloadToWavFile("music.wav", "tagged.wav", { track: 1 });
+await encodeWavFile({ path: "output.wav", json: { hello: "world" } });
+const { json } = await decodeWavFile({ path: "output.wav" });
+const hits = await scanWavFile({ path: "output.wav" });
+await prependPayloadToWavFile({ inputPath: "music.wav", outputPath: "tagged.wav", json: { track: 1 } });
 ```
 
 ### Low-level WAV encoding
@@ -173,10 +175,10 @@ await prependPayloadToWavFile("music.wav", "tagged.wav", { track: 1 });
 import { encodeWavSamples, decodeWavSamples } from "qraudio/node";
 
 // Float32Array → WAV Uint8Array  (format: "pcm16" | "float32")
-const wav = encodeWavSamples(samples, 48000, "pcm16");
+const wav = encodeWavSamples({ samples, sampleRate: 48000, format: "pcm16" });
 
 // WAV Uint8Array → { sampleRate, channels, format, samples }
-const { samples, sampleRate } = decodeWavSamples(wav);
+const { samples, sampleRate } = decodeWavSamples({ wav });
 ```
 
 ---
@@ -240,13 +242,13 @@ import { encodeAudioBuffer, decodeAudioBuffer, scanAudioBuffer } from "qraudio/w
 const ctx = new AudioContext();
 
 // Encode JSON → AudioBuffer (ready to schedule with ctx.createBufferSource())
-const { buffer, result } = encodeAudioBuffer({ hello: "world" }, { context: ctx });
+const { buffer, result } = encodeAudioBuffer({ json: { hello: "world" }, context: ctx });
 
 // Decode an AudioBuffer
-const { json } = decodeAudioBuffer(buffer);
+const { json } = decodeAudioBuffer({ buffer });
 
 // Scan an AudioBuffer for all payloads
-const hits = scanAudioBuffer(buffer);
+const hits = scanAudioBuffer({ buffer });
 ```
 
 > **Note:** Browser `AudioContext` does not have native gzip. Pass `gzipDecompress` (e.g. using `DecompressionStream`) if you need to decode gzip-compressed payloads.
@@ -298,7 +300,8 @@ const ctx = new AudioContext();
 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 const source = ctx.createMediaStreamSource(stream);
 
-const handle = await createStreamScannerNode(ctx, {
+const handle = await createStreamScannerNode({
+  context: ctx,
   onDetection: (result) => console.log("Got:", result.json),
 });
 

@@ -40,14 +40,14 @@ ProfileName.MFSK        # "mfsk"
 
 ## Core API
 
-### `encode(payload, **options) -> EncodeResult`
+### `encode(*, payload, **options) -> EncodeResult`
 
 Encodes any JSON-serializable Python object into a `list[float]` of mono audio samples.
 
 ```python
 from qraudio import encode
 
-result = encode({"hello": "world"})
+result = encode(payload={"hello": "world"})
 # result.samples      → list[float]
 # result.sample_rate  → 48000
 # result.duration_ms  → ~800
@@ -58,6 +58,7 @@ result = encode({"hello": "world"})
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
+| `payload` | `object` | — | **Required.** The value to encode |
 | `profile` | `ProfileName \| str` | `"afsk-bell"` | Modem profile |
 | `sample_rate` | `int` | `48000` | Output sample rate (Hz) |
 | `fec` | `bool` | `True` | Reed-Solomon forward error correction |
@@ -75,7 +76,7 @@ result = encode({"hello": "world"})
 
 ---
 
-### `decode(samples, **options) -> DecodeResult`
+### `decode(*, samples, **options) -> DecodeResult`
 
 Finds and decodes the first high-confidence payload in a `list[float]`.  
 Raises `ValueError` if nothing is found.
@@ -83,7 +84,7 @@ Raises `ValueError` if nothing is found.
 ```python
 from qraudio import decode
 
-result = decode(samples)
+result = decode(samples=samples)
 # result.json         → decoded Python value
 # result.profile      → ProfileName.AFSK_BELL
 # result.start_sample / end_sample → position in sample list
@@ -92,14 +93,14 @@ result = decode(samples)
 
 ---
 
-### `scan(samples, **options) -> list[ScanResult]`
+### `scan(*, samples, **options) -> list[ScanResult]`
 
 Like `decode`, but returns **all** payloads found in the audio, sorted by position. Returns an empty list when nothing is detected.
 
 ```python
 from qraudio import scan
 
-hits = scan(samples)
+hits = scan(samples=samples)
 for hit in hits:
     print(hit.json, hit.start_sample)
 ```
@@ -108,6 +109,7 @@ for hit in hits:
 
 | Parameter | Type | Description |
 |---|---|---|
+| `samples` | `list[float]` | **Required.** The audio to decode |
 | `profile` | `ProfileName \| str` | Narrow search to one profile (faster) |
 | `sample_rate` | `int` | Sample rate of the input (default `48000`) |
 | `gzip_decompress` | `Callable[[bytes], bytes]` | Override decompress function (default `gzip.decompress`) |
@@ -123,18 +125,18 @@ Gzip is handled automatically using `gzip` from the standard library.
 from qraudio import encodeWav, decodeWav, scanWav, prependPayloadToWav
 
 # Encode JSON → WAV bytes
-result = encodeWav({"track": 1})        # EncodeWavResult
+result = encodeWav(payload={"track": 1})        # EncodeWavResult
 wav_bytes: bytes = result.wav
 
 # Decode WAV bytes → JSON
-result = decodeWav(wav_bytes)
+result = decodeWav(wav_bytes=wav_bytes)
 print(result.json)
 
 # Find all payloads in WAV bytes
-hits = scanWav(wav_bytes)
+hits = scanWav(wav_bytes=wav_bytes)
 
 # Prepend encoded payload before existing audio
-result = prependPayloadToWav(existing_wav_bytes, {"track": 1})
+result = prependPayloadToWav(wav_bytes=existing_wav_bytes, payload={"track": 1})
 ```
 
 `prependPayloadToWav` accepts `pad_seconds`, `pre_pad_seconds`, and `post_pad_seconds` to add silence around the encoded payload (default `0.25` s).
@@ -147,10 +149,10 @@ All WAV helpers forward extra keyword arguments to `encode` / `decode`.
 from qraudio import encodeWavSamples, decodeWavSamples
 
 # list[float] → WAV bytes  (fmt: "pcm16" | "float32")
-wav = encodeWavSamples(samples, sample_rate=48000, fmt="pcm16")
+wav = encodeWavSamples(samples=samples, sample_rate=48000, fmt="pcm16")
 
 # WAV bytes → WavData(sampleRate, channels, format, samples)
-data = decodeWavSamples(wav)
+data = decodeWavSamples(wav_bytes=wav)
 ```
 
 ---
@@ -160,10 +162,10 @@ data = decodeWavSamples(wav)
 ```python
 from qraudio import encodeWavFile, decodeWavFile, scanWavFile, prependPayloadToWavFile
 
-encodeWavFile("output.wav", {"hello": "world"})
-result = decodeWavFile("output.wav")
-hits   = scanWavFile("output.wav")
-prependPayloadToWavFile("music.wav", "tagged.wav", {"track": 1})
+encodeWavFile(out_path="output.wav", payload={"hello": "world"})
+result = decodeWavFile(path="output.wav")
+hits   = scanWavFile(path="output.wav")
+prependPayloadToWavFile(in_path="music.wav", out_path="tagged.wav", payload={"track": 1})
 ```
 
 Paths can be `str` or `pathlib.Path`.
